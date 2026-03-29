@@ -3,69 +3,64 @@ const { db, User, Project, Task } = require('./setup');
 
 async function seedDatabase() {
     try {
-        // Force sync to reset database
+        // Reset database
         await db.sync({ force: true });
         console.log('Database reset successfully.');
 
-        // Create sample users
+        // Hash password
         const hashedPassword = await bcrypt.hash('password123', 10);
-        
+
+        // Create users
         const users = await User.bulkCreate([
             {
                 name: 'John Employee',
                 email: 'john@company.com',
-                password: hashedPassword
-                // TODO: Add role: 'employee'
-
-
+                password: hashedPassword,
+                role: 'employee'
             },
             {
                 name: 'Sarah Manager',
                 email: 'sarah@company.com',
-                password: hashedPassword
-                // TODO: Add role: 'manager'
-
-
+                password: hashedPassword,
+                role: 'manager'
             },
             {
                 name: 'Mike Admin',
                 email: 'mike@company.com',
-                password: hashedPassword
-                // TODO: Add role: 'admin'
-
-                
+                password: hashedPassword,
+                role: 'admin'
             }
-        ]);
+        ], { returning: true }); 
 
-        // Create sample projects
+        // Create projects
         const projects = await Project.bulkCreate([
             {
                 name: 'Website Redesign',
                 description: 'Complete overhaul of company website',
-                managerId: users[1].id, // Sarah Manager
+                managerId: users[1].id,
                 status: 'active'
             },
             {
                 name: 'Mobile App Development',
                 description: 'New mobile app for customers',
-                managerId: users[1].id, // Sarah Manager
+                managerId: users[1].id,
                 status: 'active'
             },
             {
                 name: 'Database Migration',
                 description: 'Migrate legacy database to new system',
-                managerId: users[2].id, // Mike Admin
+                managerId: users[2].id,
                 status: 'planning'
             }
-        ]);
+        ], { returning: true }); 
 
-        // Create sample tasks
+        // Create tasks
         await Task.bulkCreate([
             {
                 title: 'Design homepage mockup',
                 description: 'Create wireframes and mockups for new homepage',
                 projectId: projects[0].id,
-                assignedUserId: users[0].id, // John Employee
+                assignedUserId: users[0].id,
                 status: 'in-progress',
                 priority: 'high'
             },
@@ -73,7 +68,7 @@ async function seedDatabase() {
                 title: 'Set up development environment',
                 description: 'Configure local development setup',
                 projectId: projects[1].id,
-                assignedUserId: users[0].id, // John Employee
+                assignedUserId: users[0].id,
                 status: 'completed',
                 priority: 'medium'
             },
@@ -81,19 +76,16 @@ async function seedDatabase() {
                 title: 'Review database schema',
                 description: 'Analyze current database structure',
                 projectId: projects[2].id,
-                assignedUserId: users[1].id, // Sarah Manager
+                assignedUserId: users[1].id,
                 status: 'pending',
                 priority: 'high'
             }
         ]);
 
         console.log('Database seeded successfully!');
-        console.log('Sample users created:');
-        console.log('- john@company.com (Employee)');
-        console.log('- sarah@company.com (Manager)');
-        console.log('- mike@company.com (Admin)');
-        console.log('All passwords: password123');
-        
+        console.log('Users: john@company.com, sarah@company.com, mike@company.com');
+        console.log('Password for all users: password123');
+
     } catch (error) {
         console.error('Error seeding database:', error);
     } finally {

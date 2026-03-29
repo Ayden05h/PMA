@@ -1,14 +1,14 @@
 const { Sequelize, DataTypes } = require('sequelize');
 require('dotenv').config();
 
-// Initialize database connection
 const db = new Sequelize({
-    dialect: process.env.DB_TYPE,
-    storage: `database/${process.env.DB_NAME}` || 'database/company_projects.db',
+    dialect: process.env.DB_TYPE || 'sqlite',
+    storage: process.env.DB_NAME
+        ? `database/${process.env.DB_NAME}`
+        : 'database/company_projects.db',
     logging: false
 });
 
-// User Model
 const User = db.define('User', {
     id: {
         type: DataTypes.INTEGER,
@@ -28,10 +28,16 @@ const User = db.define('User', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    // TODO: Add role field (employee, manager, admin)
+    role: {
+        type: DataTypes.ENUM('employee', 'manager', 'admin'),
+        allowNull: false,
+        defaultValue: 'employee'
+    }
+}, {
+    timestamps: true
 });
 
-// Project Model
+
 const Project = db.define('Project', {
     id: {
         type: DataTypes.INTEGER,
@@ -50,9 +56,11 @@ const Project = db.define('Project', {
         type: DataTypes.STRING,
         defaultValue: 'active'
     }
+}, {
+    timestamps: true
 });
 
-// Task Model
+
 const Task = db.define('Task', {
     id: {
         type: DataTypes.INTEGER,
@@ -75,9 +83,10 @@ const Task = db.define('Task', {
         type: DataTypes.STRING,
         defaultValue: 'medium'
     }
+}, {
+    timestamps: true
 });
 
-// Define Relationships
 User.hasMany(Project, { foreignKey: 'managerId', as: 'managedProjects' });
 Project.belongsTo(User, { foreignKey: 'managerId', as: 'manager' });
 
@@ -87,13 +96,13 @@ Task.belongsTo(Project, { foreignKey: 'projectId' });
 User.hasMany(Task, { foreignKey: 'assignedUserId', as: 'assignedTasks' });
 Task.belongsTo(User, { foreignKey: 'assignedUserId', as: 'assignedUser' });
 
-// Initialize database
 async function initializeDatabase() {
     try {
         await db.authenticate();
         console.log('Database connection established successfully.');
-        
+
         await db.sync({ force: false });
+
         console.log('Database synchronized successfully.');
     } catch (error) {
         console.error('Unable to connect to database:', error);
